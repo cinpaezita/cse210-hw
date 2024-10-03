@@ -4,6 +4,13 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello Develop03 World!");
+        ///Console.WriteLine("Scripture Text");
+        Reference reference = new Reference("", 3, 5, 6);
+        Scripture scripture = new Scripture(reference, "");
+
+        while (true)
+        {
+
+        }
     }
 }
