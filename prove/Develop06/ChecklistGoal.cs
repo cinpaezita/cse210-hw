@@ -31,6 +31,16 @@ public class ChecklistGoal : Goal
     public override string GetDetailString()
     {
         string status = IsComplete() ? "[X]" : "[ ]";
-        return status + " " + _shortName + "(" + _description + ")" +  " --- Currently completed: " + _amountCompleted + "/" + _target;
+        return status + " " + _shortName + " " + "(" + _description + ")" +  " --- Currently completed: " + _amountCompleted + "/" + _target;
+    }
+
+    public int GetCompletionCount()
+    {
+        return _amountCompleted;
+    }
+
+    public int GetTarget()
+    {
+        return _target;
     }
 }

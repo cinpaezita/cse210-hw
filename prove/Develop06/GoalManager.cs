@@ -1,14 +1,24 @@
-// Página web donde investigué sobre try-catch Link: https://learn.microsoft.com/es-es/dotnet/csharp/language-reference/statements/exception-handling-statements
-using System;
+// Creativity: When I complete a ChecklistGoal, stars and encouragement messages appear at the beginning, halfway, and at the end
+// of the goal. I created the DisplayEncouragementMessage() method, which utilizes getters from the ChecklistGoal class to access
+// GetCompletionCount() and GetTarget(). Additionally, I introduced a new variable called _halfMessageDisplayed in GoalManager to
+// ensure that the progress message with stars only appears at the halfway point, as it was previously showing from the halfway mark
+// until the task was completed. To handle exceptions, I found the try-catch method in the Microsoft documentation:
+// https://learn.microsoft.com/es-es/dotnet/csharp/language-reference/statements/exception-handling-statements To resolve the issue
+// of stars not appearing in the output, I found useful information on Stack Overflow: https://stackoverflow.com/questions/5750203/how-to-write-unicode-characters-to-the-console
+
 using System.Collections.Generic;
 using System.IO;
 public class GoalManager
 {
+    private bool _halfMessageDisplayed = false;
     private List<Goal> _goals = new List<Goal>();
     private int _playerScore = 0;
+    private int _completedGoals = 0;
 
     public void Start()
     {
+        DisplayPlayerInfo();
+
         bool running = true;
         while (running)
         {
@@ -51,7 +61,7 @@ public class GoalManager
 
     public void DisplayPlayerInfo()
     {
-        Console.WriteLine("Player actual score: " + _playerScore);
+        Console.WriteLine($"\nYou have {_playerScore} points.\n");
     }
 
     public void ListGoalNames()
@@ -69,7 +79,6 @@ public class GoalManager
         int goalNumber = 1; //Start numbering from 1 :/
         foreach (Goal goal in _goals)
         {
-
             Console.WriteLine($"{goalNumber}. {goal.GetDetailString()}");
             goalNumber++;
         }
@@ -131,12 +140,23 @@ public class GoalManager
                 Goal goalToRecord = _goals [selectedGoal - 1];
                 goalToRecord.RecordEvent();
 
-                 _playerScore += goalToRecord.GetPoints();
-                Console.WriteLine($"Congratulations! You have earned {goalToRecord.GetPoints()} points!");
-                Console.WriteLine($"You now have {goalToRecord.GetPoints()} points.");
-
+                if (goalToRecord is ChecklistGoal checklistGoal)
+                {
+                
+                    _completedGoals += checklistGoal.GetCompletionCount();
+                    _playerScore += goalToRecord.GetPoints();
+                    Console.WriteLine($"Congratulations! You have earned {goalToRecord.GetPoints()} points!");
+                    Console.WriteLine($"You now have {goalToRecord.GetPoints()} points.");
+                    DisplayEncouragementMessage(goalToRecord);
+                }
+                else
+                {
+                    _playerScore += goalToRecord.GetPoints();
+                    Console.WriteLine($"Congratulations! You have earned {goalToRecord.GetPoints()} points!");
+                    Console.WriteLine($"You now have {goalToRecord.GetPoints()} points.");
+                }
+                
             }
-
             else
             {
                 Console.WriteLine("Invalid goal number.");
@@ -149,6 +169,34 @@ public class GoalManager
 
     }
 
+    private void DisplayEncouragementMessage(Goal goalToRecord)
+    {
+        if (goalToRecord is ChecklistGoal checklistGoal)
+        {
+            int completionCount = checklistGoal.GetCompletionCount();
+            int target = checklistGoal.GetTarget();
+
+            string star = "\u2B50";
+
+            if (completionCount == 1)
+            {
+                Console.WriteLine($"{star} Great start! Keep going!");
+            }
+            
+            else if (completionCount >= target / 2 && completionCount < target && !_halfMessageDisplayed)
+            {
+                Console.WriteLine($"{star}{star} You're halfway there! Keep it up!");
+                _halfMessageDisplayed = true;
+            }
+            else if (completionCount >= target)
+            {
+                Console.WriteLine($"{star}{star}{star} Congratulations! You've completed all your goals!");
+                _halfMessageDisplayed = false;
+            }
+        }
+
+    }
+
     public void SaveGoals()
     {
         Console.Write("What is the filename for the goal file? ");
@@ -156,6 +204,7 @@ public class GoalManager
 
         using (StreamWriter outputFile = new StreamWriter(fileName))
         {
+            outputFile.WriteLine(_playerScore); //to save the total score
             foreach (Goal goal in _goals)
             {
                 outputFile.WriteLine(goal.GetStringRepresentation());
@@ -174,8 +223,11 @@ public class GoalManager
             _goals.Clear();
             string[] lines = File.ReadAllLines(fileName);
 
-            foreach (string line in lines)
+            _playerScore = int.Parse(lines[0]);
+
+            for (int i = 1; i < lines.Length; i++)
             {
+                string line = lines[i];
                 string[] parts = line.Split(':');
                 
                 if (parts.Length < 2)
@@ -189,7 +241,6 @@ public class GoalManager
 
                 if (goalType == "SimpleGoal")
                 {
-                    
                     if (goalData.Length < 4)
                     {
                         Console.WriteLine("Data missing for SimpleGoal.");
@@ -230,21 +281,17 @@ public class GoalManager
                     
                 
                     ChecklistGoal checklistGoal = new ChecklistGoal(name, description, points, target, bonus);
-                    for (int i = 0; i < amountCompleted; i++)
+                    for (int j = 0; j < amountCompleted; j++)
                     {
                         checklistGoal.RecordEvent();
                     }
                     _goals.Add(checklistGoal);
                 }
-                
-
-                
             }
         }
         else
         {
             Console.WriteLine("The file is not exist");
-        }
+        }  
     }
-
 }

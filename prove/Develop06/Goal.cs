@@ -28,6 +28,7 @@ public abstract class Goal
 
     public virtual string GetDetailString()
     {
-        return "[ ]" + " " + _shortName + "(" + _description + ")";
+        string status = IsComplete() ? "[X]" : "[ ]";
+        return status + " " + _shortName + " " + "(" + _description + ")";
     }
 }
